@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Царская гроза</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ponomar&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+:root{
+  --bg:#E7E6E0; --surface:#F4F3EE; --ink:#231F1C; --muted:#5E5850;
+  --red:#A8231A; --blue:#1F4A7A; --gold:#8E6A18; --line:#C7C4B9;
+  --display:'Ponomar','Old Standard TT','Palatino Linotype',Palatino,Georgia,serif;
+  --body:'PT Serif',Georgia,'Times New Roman',serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#131826; --surface:#1B2133; --ink:#E8E4DA; --muted:#A6A198;
+    --red:#E46A5C; --blue:#86AEDF; --gold:#D4AE55; --line:#303850;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131826; --surface:#1B2133; --ink:#E8E4DA; --muted:#A6A198;
+  --red:#E46A5C; --blue:#86AEDF; --gold:#D4AE55; --line:#303850;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+.wrap{max-width:34rem;margin:0 auto;padding:0 1.1rem 3rem}
+
+/* мерила */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar[hidden]{display:none}
+.bar-in{max-width:34rem;margin:0 auto;padding:.55rem 1.1rem;display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
+.stat{font-size:.82rem;line-height:1.2}
+.stat-top{display:flex;justify-content:space-between;align-items:baseline}
+.stat-num{font-weight:700;font-size:1rem;transition:color .4s}
+.stat.up .stat-num{color:var(--blue)}
+.stat.down .stat-num{color:var(--red)}
+.meter{display:block;height:4px;margin-top:.3rem;background:var(--line)}
+.meter i{display:block;height:100%;background:var(--gold);transition:width .5s ease}
+
+/* кремль */
+.kremlin{margin:1.1rem 0 0}
+.kremlin svg{display:block;width:100%;height:auto}
+.kremlin figcaption{font-size:.82rem;color:var(--muted);font-style:italic;margin-top:.3rem}
+
+/* сцена */
+.when{margin:1.4rem 0 0;color:var(--muted);font-size:.95rem}
+h1,h2{font-family:var(--display);font-weight:400;color:var(--red);line-height:1.15;margin:.2rem 0 .8rem}
+h1{font-size:2.7rem}
+h2{font-size:2rem}
+h1:focus,h2:focus{outline:none}
+p{margin:0 0 .9rem}
+.story p:first-child::first-letter{font-family:var(--display);color:var(--red);font-size:3.1em;line-height:.9;float:left;padding:.08em .1em 0 0}
+.choices{display:grid;gap:.6rem;margin-top:1.2rem}
+button{font:inherit;color:inherit;cursor:pointer}
+.choice{text-align:left;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--red);padding:.8rem .9rem;border-radius:2px;line-height:1.4}
+.choice:hover{border-color:var(--ink);border-left-color:var(--red)}
+.go{background:var(--red);color:#fff;border:0;padding:.8rem 1.2rem;border-radius:2px;margin-top:.6rem;font-weight:700}
+.go.ghost{background:none;color:var(--ink);border:1px solid var(--ink);font-weight:400;margin-left:.5rem}
+:root[data-theme="dark"] .go:not(.ghost){color:#131826}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .go:not(.ghost){color:#131826}}
+button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.picked{font-style:italic;color:var(--muted);border-left:3px solid var(--line);padding-left:.8rem;margin:1rem 0}
+.delta{display:flex;flex-wrap:wrap;gap:.4rem 1rem;font-size:.92rem;font-weight:700;margin:0 0 1rem}
+.delta .plus{color:var(--blue)}
+.delta .minus{color:var(--red)}
+.fact{border-left:3px solid var(--blue);padding:.1rem 0 .1rem .8rem;margin:1rem 0;font-size:.95rem}
+.fact b{display:block;color:var(--blue);font-size:.88rem}
+.verdict{font-size:.92rem;margin:0 0 .5rem}
+.verdict.same{color:var(--blue)}
+.verdict.other{color:var(--red)}
+.log{list-style:none;padding:0;margin:1.2rem 0;border-top:1px solid var(--line)}
+.log li{padding:.55rem 0;border-bottom:1px solid var(--line);font-size:.92rem;line-height:1.4}
+.log .yr{font-weight:700;margin-right:.4rem}
+.log .mk{display:block;font-size:.84rem}
+.log .mk.same{color:var(--blue)}
+.log .mk.other{color:var(--red)}
+.score{font-weight:700}
+#stage{animation:in .35s ease}
+@keyframes in{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#stage{animation:none}.meter i,.stat-num{transition:none}}
+</style>
+</head>
+<body>
+<header class="bar" id="bar" hidden><div class="bar-in" id="stats"></div></header>
+<div class="wrap">
+  <figure class="kremlin" id="kremlin"></figure>
+  <main id="stage" aria-live="polite"></main>
+</div>
+
+<script>
+const S=[
+{y:'1547',who:'Иван IV',t:'Пожар',
+ p:['Ты венчан на царство, тебе 16 лет, но ты по-прежнему чаще ездишь по монастырям, чем правишь. В июне Москва выгорает на треть. Народ винит Глинских, твоих дядей по матери: одного из них толпа уже забила камнями.',
+    'Мятежники идут в Воробьёво, где ты укрылся. Протопоп Сильвестр говорит тебе жёсткие слова о долге государя.'],
+ c:[{l:'Выслушать Сильвестра, удалить Глинских и собрать новых советников',ok:1,e:{a:2,k:-1},r:'Толпа разошлась. Вокруг тебя сложился круг Алексея Адашева, Сильвестра и митрополита Макария, позже его назовут Избранной радой.'},
+    {l:'Выслать на мятежников дружину',e:{v:-2,a:-2},r:'Сил под рукой оказалось мало. Стычка в разорённом городе ожесточила москвичей ещё сильнее.'},
+    {l:'Уехать из столицы и переждать',e:{a:-3},r:'Москва осталась без царя среди пепла. Люди решили, что государю нет до них дела.'}],
+ h:'Пожар 1547 г. выжег треть Москвы. Юрия Глинского убила толпа, остальные Глинские бежали. Бунт утих сам собой, а к началу 1549 г. Иван IV собрал круг советников: Адашева, Сильвестра, Макария, Курбского.'},
+
+{y:'1549',who:'Иван IV',t:'Собор примирения',
+ p:['Рада предлагает показать стране, что боярскому произволу конец. В столицу съезжаются бояре, духовенство и выборные от служилых людей.',
+    'Все помнят беззакония твоего детства.'],
+ c:[{l:'Выйти на лобное место, повиниться за прошлые неправды и созвать Земский собор',ok:1,e:{a:3,k:1},r:'Ты попросил забыть вражду и обещал стоять за справедливость. Собор утвердил новый Судебник, подготовленный Адашевым: судьям запрещено волочить дела и брать взятки.'},
+    {l:'Править одними указами, без выборных',e:{a:-1},r:'Указы выходили, но поддержки у них не было. Наместники по-прежнему судили как хотели.'},
+    {l:'Сначала покарать бояр, правивших в твоё детство',e:{a:-2,v:-1},r:'Старая вражда вспыхнула снова. Знатные роды стали бояться тебя, а не поддерживать.'}],
+ h:'Первый Земский собор 1549 г. историки называют «собором примирения». Судебник 1550 г. под угрозой опалы запрещал «волочить дела», наказывал за взятки, а наместники теперь судили вместе с выборными старостами и целовальниками.'},
+
+{y:'1550',who:'Иван IV',t:'Войско',
+ p:['Огнестрельное оружие решает всё больше. Дворянская конница хороша, но воеводы спорят о «местах» даже на войне.',
+    'Ты помнишь, что в 1547 г. у тебя под рукой не оказалось сил. Что делать с армией?'],
+ c:[{l:'Создать стрельцов на жалованье и запретить местнические споры в походах',ok:1,e:{v:3,k:-2},r:'Первые три тысячи стрельцов получили оружие, форму и жалованье. Воеводы обязаны служить «без мест». Позже Уложение о службе привяжет число воинов к размеру земли.'},
+    {l:'Оставить всё как есть: пусть дворяне воюют по старинке',e:{v:-2},r:'Конница сильна на степных границах, но против пушек и пищалей она слабеет, а споры воевод разрушают походы.'},
+    {l:'Нанять иноземных мастеров и солдат вместо своих полков',e:{k:-3,v:1},r:'Заморские мастера дороги, а надёжных людей среди них мало. Казна быстро тает.'}],
+ h:'В 1550 г. создали первое постоянное стрелецкое войско: 3000 человек в шести «приказах». Тогда же запретили местнические споры между воеводами во время войны. Уложение о службе 1556 г. требовало выходить на службу «конно, людно и оружно», число воинов зависело от размера земли.'},
+
+{y:'1552',who:'Иван IV',t:'Казань',
+ p:['Два зимних похода на Казань не удались: оттепель, пушки в полыньях, трудности со снабжением. Казанские мурзы то присягают Москве, то зовут Крым.',
+    'Как действовать теперь?'],
+ c:[{l:'Срубить Свияжск рядом с Казанью и осадить город с подкопами и пушками',ok:1,e:{v:1,k:2,a:2},r:'Крепость собрали за 28 дней. Горная сторона присягнула тебе. Взрывы подкопов обрушили стены, и 2 октября город взят. Казанское ханство пало.'},
+    {l:'Снова идти зимой по льду Волги',e:{v:-2,k:-1},r:'Лёд опять подвёл. Войско вернулось, не дойдя до стен.'},
+    {l:'Посадить в Казани своего союзника Шах-Али',e:{a:-2,v:-1},r:'Шах-Али не чувствовал себя в безопасности и уехал сам. Казанцы позвали астраханского царевича.'}],
+ h:'Свияжск строили под руководством дьяка Ивана Выродкова. Казань взяли 2 октября 1552 г., в 1556 г. присоединили Астрахань. К концу 1550-х всё Поволжье стало российским, территория выросла почти вдвое. В память о победе построили собор Покрова на Рву.'},
+
+{y:'1558',who:'Иван IV',t:'Ливония',
+ p:['С востока опасности больше нет, а Крым силён, за ним стоит султан. Английские купцы уже торгуют с тобой через Белое море, но тебе нужны свои балтийские порты. Ливонский орден задерживает нанятых тобой мастеров и отказался платить юрьевскую дань.',
+    'Адашев советует не лезть в Ливонию, а заняться югом.'],
+ c:[{l:'Начать войну с Ливонией за выход к Балтике',ok:1,e:{v:1,a:1,k:-2},r:'Нарва сдалась в мае, за полгода взято около двадцати городов, русские полки дошли до Риги. Но Польша, Литва и Швеция не оставят Ливонию без борьбы.'},
+    {l:'Прислушаться к Адашеву и заняться Крымом',e:{k:1,a:1},r:'Затяжной западной войны удалось избежать, но балтийских портов нет, а крымцы продолжают набеги.'},
+    {l:'Торговать через Белое море и ждать',e:{k:1,a:-1},r:'Англичане торгуют беспошлинно, но сильнейшие соседи по-прежнему блокируют твои связи с Европой.'}],
+ h:'Ливонская война шла в 1558–1583 гг. Польша, Литва, Швеция и Дания вмешались в неё, и война превратилась в крупный международный конфликт на 25 лет. Адашев выступал за её прекращение, а Иван IV хотел завоевать Ливонию «во что бы то ни стало».'},
+
+{y:'1560',who:'Иван IV',t:'Смерть царицы',
+ p:['Умирает Анастасия, которую ты любил. Тебе кажется, что её отравили люди из окружения Адашева. Обида давняя: в 1553 г., когда ты был при смерти, они не спешили присягать твоему сыну.',
+    'Адашев и Сильвестр всё ещё рядом.'],
+ c:[{l:'Поверить в отравление: Адашева отправить на войну и под арест, Сильвестра в ссылку',ok:1,e:{a:-2,v:-1},r:'Адашев умер в заточении, Сильвестр оказался на Соловках. Прежний круг распался, а с ним и привычка советоваться.'},
+    {l:'Провести открытое следствие в Боярской думе',e:{a:2,k:-1},r:'Доказательств не нашлось. Советники остались при деле, но следствие заняло месяцы, а недоверие между вами не ушло.'},
+    {l:'Простить обиды и оставить всё как есть',e:{a:1},r:'Рада продолжает работу, но споры о Ливонской войне остаются: Адашев против, ты хочешь воевать.'}],
+ h:'В 1560 г. умерла Анастасия Романовна. Иван IV считал, что люди Адашева «отравами царицу изведоша». Адашева арестовали, он умер в заточении, Сильвестра сослали на Соловки. Начались новые опалы, а в 1564 г. в Литву бежал Курбский.'},
+
+{y:'1564',who:'Иван IV',t:'Александровская слобода',
+ p:['Курбский бежал в Литву. Воеводы отказываются идти в наступление, в битве на Улле погибло до тысячи воинов. Тебе кажется, что вокруг одна измена.',
+    'Бояре и духовенство недовольны казнями. Как ответить?'],
+ c:[{l:'Уехать из Москвы в Александровскую слободу и прислать два письма: боярам с гневом, горожанам без гнева',ok:1,e:{a:-2,k:2,v:1},r:'Москвичи потребовали, чтобы бояре упросили тебя вернуться. Ты согласился с условием: класть опалы на изменников, брать их имение в казну и учредить опричнину.'},
+    {l:'Вернуться в Москву и договориться с Думой',e:{a:2,k:-1},r:'Дума и духовенство сохранили прежний порядок, но страх перед изменой тебя не оставил.'},
+    {l:'Казнить подозреваемых бояр, не покидая Москвы',e:{a:-3,v:-1},r:'Казни без опоры на людей и закон озлобили Думу и духовенство.'}],
+ h:'В декабре 1564 г. царь уехал в Александровскую слободу, в январе 1565 г. прислал два письма: боярам с гневом, горожанам без. Вернуться он согласился с правом казнить изменников и брать их имение в казну. Часть земель и службы он взял себе как опричнину, с земщины взыскал 100 тыс. рублей.'},
+
+{y:'1570',who:'Иван IV',t:'Новгород',
+ p:['Опричнина идёт пятый год. Казнён Владимир Старицкий, твой двоюродный брат. Митрополит Филипп лишён сана за то, что упрекал тебя.',
+    'Приходит донос: новгородцы будто бы хотят предаться Литве.'],
+ c:[{l:'Послать на Новгород опричное войско и стрельцов',ok:1,e:{k:-2,a:-2},r:'Погромы прошли по Клину, Твери и Торжку. Сорок дней длился разгром Новгорода. В твоём синодике записано 1490 погибших, а по оценкам некоторых учёных их было больше.'},
+    {l:'Сначала проверить донос',e:{k:-1,a:1},r:'Проверка заняла время, доноса никто не подтвердил. Новгород остался цел, но опричники недовольны.'},
+    {l:'Отправить в Новгород одних стрельцов, без опричников',e:{v:-1,a:-1},r:'Стрельцы могли только арестовывать. Розыск затянулся, а доносчики остались при дворе.'}],
+ h:'Опричное войско и 1500 стрельцов выступили в декабре 1569 г., в январе 1570 г. дошли до Новгорода. По оценке историков, по приказу Ивана IV казнено 3–4 тыс. человек, ещё около 15 тыс. пало жертвами опричников. Псков, по преданию, спас юродивый Николка Салос.'},
+
+{y:'1572',who:'Иван IV',t:'Молоди',
+ p:['В 1571 г. хан Девлет-Гирей сжёг Москву, пока ты оставил войско и уехал в Ростов. Опричники оказались слабой защитой. Летом 1572 г. хан идёт снова: 80 тысяч конницы и 7 тысяч янычар.'],
+ c:[{l:'Отменить опричнину и поручить объединённое войско князю Воротынскому',ok:1,e:{v:3,a:2,k:-1},r:'Земские и опричные полки встали вместе. Воротынский принял бой у гуляй-города возле деревни Молоди и ударил хану в тыл. В Крым вернулось не больше 20 тысяч человек.'},
+    {l:'Снова уехать из армии и положиться на опричников',e:{v:-3,a:-1},r:'Без единого командования и общей воли войско дрогнуло. Хан прорвался к Москве во второй раз.'},
+    {l:'Откупиться от хана',e:{k:-3,a:-2},r:'Серебро хан взял, а через год придёт за новым. Тебя стали считать слабым.'}],
+ h:'Осенью 1572 г. опричнину отменили, само слово запретили. Победа при Молодях, по оценке учебника, предотвратила гибель государства. Но последствия опричнины, Ливонской войны, неурожаев и чумы тяжелы: в 1581 г. введены заповедные лета, отменявшие Юрьев день.'}
+];
+
+const ENDS={
+ win:{t:'Сильная держава',x:'Реформы 1550-х дали плоды, Поволжье вошло в состав России, а ты сберёг доверие и силы страны. В истории всё сложилось иначе: опричнина и Ливонская война обескровили Россию.'},
+ part:{t:'Грозный царь',x:'Ты правил, как Иван IV. Территория России почти вдвое выросла за счёт Поволжья, началось освоение Сибири. Но Ливонская война проиграна, Нарву, Ивангород и Копорье пришлось отдать шведам, крестьян закрепощают. В 1584 г. ты умираешь, оставив трон Фёдору, а наследник Иван погиб за три года до этого.'},
+ razor:{t:'Казна пуста',x:'Платить нечем ни воинам, ни мастерам. Служилые люди нищают, крестьяне бегут, бояре смотрят в сторону Литвы.'},
+ vragi:{t:'Войско разбито',x:'Армии не осталось. Первый же сильный противник вошёл в твои земли и поделил их.'},
+ neglavn:{t:'Доверие потеряно',x:'Бояре, дворяне и народ больше не верят царю. Страну раздирают заговоры и бегство, а власть держится на одном страхе.'}
+};
+const NAMES={k:'Казна',v:'Войско',a:'Доверие'};
+const CAPS=['','','','Москва, XVI век'];
+const KEY='tsarskaya-groza-v1';
+let st, prev={k:5,v:5,a:5};
+const $=id=>document.getElementById(id);
+const fresh=()=>({i:0,k:5,v:5,a:5,log:[]});
+const cl=n=>Math.max(0,Math.min(10,n));
+function mix(n){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s.i==='number'&&s.i<S.length&&Array.isArray(s.log))return s}catch(e){}return null}
+function wipe(){try{localStorage.removeItem(KEY)}catch(e){}}
+
+function kremlin(s){s=3;
+  const c=[{w:'#8B5E3C',d:'#5A3A22',h:18,tw:[180],dm:[]},
+           {w:'#6E4A2B',d:'#3F2815',h:24,tw:[60,180,300],dm:[232]},
+           {w:'#F6F3EA',d:'#BDB6A4',h:30,tw:[36,132,228,324],dm:[84,180]},
+           {w:'#A63D2C',d:'#6B2318',h:34,tw:[28,104,180,256,332],dm:[66,142,218]}][s];
+  const B=88,top=B-c.h,ln=s===0?c.d:'var(--ink)';let o='';
+  c.dm.forEach(x=>{const y=top-8;
+    o+=`<rect x="${x-6}" y="${y}" width="12" height="${B-y}" fill="#F6F3EA" stroke="var(--ink)"/>`+
+       `<path d="M${x-5} ${y}C${x-10} ${y-7} ${x-2} ${y-10} ${x} ${y-16}C${x+2} ${y-10} ${x+10} ${y-7} ${x+5} ${y}Z" fill="#C9A23A" stroke="var(--ink)"/>`+
+       `<path d="M${x} ${y-16}v-6M${x-2} ${y-20}h4" stroke="var(--ink)" fill="none"/>`});
+  if(s===0){for(let x=20;x<340;x+=8)o+=`<path d="M${x} ${B}V${top}l4 -5l4 5V${B}Z" fill="${c.w}" stroke="${c.d}"/>`}
+  else{let d=`M20 ${B}V${top}`;for(let x=20;x<340;x+=10)d+=s===3?'v-6l2.5 3l2.5 -3v6h5':'v-5h5v5h5';
+    o+=`<path d="${d}V${B}Z" fill="${c.w}" stroke="var(--ink)"/>`}
+  c.tw.forEach(x=>{const m=x===180,th=c.h+(m?22:12),y=B-th,w=m?26:20;
+    o+=`<rect x="${x-w/2}" y="${y}" width="${w}" height="${th}" fill="${c.w}" stroke="${ln}"/>`+
+       `<path d="M${x-w/2-2} ${y}L${x} ${y-(m?20:14)}L${x+w/2+2} ${y}Z" fill="${c.d}" stroke="${ln}"/>`;
+    if(m)o+=`<path d="M${x-5} ${B}v-9a5 5 0 0 1 10 0v9Z" fill="#231F1C"/>`});
+  o+=`<rect x="0" y="${B}" width="360" height="8" fill="var(--line)"/>`;
+  $('kremlin').innerHTML=`<svg viewBox="0 0 360 96" role="img" aria-label="${CAPS[s]}">${o}</svg><figcaption>${CAPS[s]}</figcaption>`;
+}
+
+function stats(){
+  $('stats').innerHTML=['k','v','a'].map(n=>{
+    const d=st[n]-prev[n];
+    return `<div class="stat${d>0?' up':d<0?' down':''}"><span class="stat-top"><span>${NAMES[n]}</span><span class="stat-num">${st[n]}</span></span><span class="meter"><i style="width:${st[n]*10}%"></i></span></div>`}).join('');
+  prev={k:st.k,v:st.v,a:st.a};
+}
+function show(html,bar){
+  $('bar').hidden=!bar;
+  const el=$('stage');el.innerHTML=html;
+  el.style.animation='none';void el.offsetWidth;el.style.animation='';
+  window.scrollTo(0,0);
+  const h=el.querySelector('h1,h2');if(h){h.tabIndex=-1;h.focus({preventScroll:true})}
+}
+
+function start(){
+  kremlin(0);
+  const s=load();
+  show(`<h1>Царская гроза</h1>
+  <div class="story"><p>Новелла о правлении Ивана IV Грозного, 1547–1572 годы.</p>
+  <p>Ты русский царь. Решения принимаешь ты, от пожара в Москве до отмены опричнины.</p>
+  <p>Следи за казной, войском и доверием бояр, дворян и народа. Если любая шкала упадёт до нуля, правление закончится. После каждого решения узнаешь, как было на самом деле.</p></div>
+  <button class="go" id="new">Начать правление</button>${s&&s.i>0?`<button class="go ghost" id="cont">Продолжить с ${S[s.i].y} года</button>`:''}`,false);
+  $('new').onclick=()=>{st=fresh();prev={k:5,v:5,a:5};wipe();scene()};
+  if($('cont'))$('cont').onclick=()=>{st=s;prev={k:s.k,v:s.v,a:s.a};scene()};
+}
+
+function scene(){
+  const s=S[st.i];save();kremlin(s.kr);stats();
+  show(`<p class="when">${s.y} год. ${s.who}</p><h2>${s.t}</h2>
+  <div class="story">${s.p.map(x=>`<p>${x}</p>`).join('')}</div>
+  <div class="choices">${mix(s.c.length).map(i=>`<button class="choice" data-i="${i}">${s.c[i].l}</button>`).join('')}</div>`,true);
+  document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>choose(+b.dataset.i));
+}
+
+function choose(i){
+  const s=S[st.i],c=s.c[i],e=c.e||{};
+  ['k','v','a'].forEach(n=>{if(e[n])st[n]=cl(st[n]+e[n])});
+  st.log.push({y:s.y,t:s.t,l:c.l,ok:!!c.ok});
+  const end=c.end||(st.v<=0?'vragi':st.k<=0?'razor':st.a<=0?'neglavn':null);
+  const last=st.i===S.length-1;
+  stats();
+  const dl=['k','v','a'].filter(n=>e[n]).map(n=>`<span class="${e[n]>0?'plus':'minus'}">${NAMES[n]} ${e[n]>0?'+':'−'}${Math.abs(e[n])}</span>`).join('');
+  show(`<p class="when">${s.y} год. ${s.who}</p><h2>${s.t}</h2>
+  <p class="picked">${c.l}</p>
+  <p>${c.r}</p>
+  ${dl?`<p class="delta">${dl}</p>`:''}
+  <p class="verdict ${c.ok?'same':'other'}">${c.ok?'Так поступил и Иван IV.':'В истории царь поступил иначе.'}</p>
+  <div class="fact"><b>Как было на самом деле</b>${s.h}</div>
+  <button class="go" id="next">${end?'Узнать, чем всё кончилось':last?'Подвести итог':'Дальше'}</button>`,true);
+  $('next').onclick=()=>{
+    if(end)return finish(end,c.et);
+    if(last){const n=st.log.filter(x=>x.ok).length;return finish(st.a>=8&&st.k>=4?'win':'part')}
+    st.i++;scene();
+  };
+}
+
+function finish(key,custom){
+  const E=ENDS[key],n=st.log.filter(x=>x.ok).length,tot=st.log.length,y=S[st.i].y;
+  wipe();kremlin(key==='win'||key==='part'?3:S[st.i].kr);
+  show(`<p class="when">${key==='win'||key==='part'?'Итог правления':'Правление оборвалось в '+y+' году'}</p><h2>${E.t}</h2>
+  <div class="story">${custom?`<p>${custom}</p>`:''}<p>${E.x}</p></div>
+  <p class="score">Решений, совпавших с историей: ${n} из ${tot}. Всего в игре ${S.length}.</p>
+  <ul class="log">${st.log.map(x=>`<li><span class="yr">${x.y}</span>${x.l}<span class="mk ${x.ok?'same':'other'}">${x.ok?'как в истории':'иначе, чем в истории'}</span></li>`).join('')}</ul>
+  <button class="go" id="again">Начать заново</button>`,true);
+  $('again').onclick=start;
+}
+
+start();
+</script>
+</body>
+</html>
